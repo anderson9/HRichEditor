@@ -2,7 +2,7 @@ apply plugin: 'com.android.application'
 
 android {
     compileSdkVersion 24
-    buildToolsVersion '24.0.1'
+    buildToolsVersion '26.0.2'
     defaultConfig {
         applicationId "hricheditor.hdl.com.hricheditor"
         minSdkVersion 14
@@ -24,6 +24,5 @@ dependencies {
     compile 'com.android.support:appcompat-v7:24.+'
     testCompile 'junit:junit:4.12'
     compile 'com.hdl:elog:v2.0.2'
-    compile 'com.jwkj:CrashExceptioner:v2.0.3'
     compile project(path: ':HRichEditorView')
 }

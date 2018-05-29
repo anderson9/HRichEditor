@@ -2,70 +2,74 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginLeft="5dp"
-    android:layout_marginRight="5dp"
     android:layout_marginTop="3dp"
     android:orientation="vertical">
 
-    <include layout="@layout/view_add_item" />
-
-    <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    <ImageView
+        android:id="@+id/iv_additem_add_top"
+        style="@style/additem"
+        android:layout_gravity="center"
+        android:src="@mipmap/add" />
+    <RelativeLayout
         android:id="@+id/rl_item"
         android:layout_width="match_parent"
-        android:layout_height="120dp"
-        android:background="@drawable/shape_item_bg"
-        android:padding="5dp">
+        android:layout_height="100dp"
+        android:background="@drawable/background_editor_item_no_stroke"
+        >
 
         <ImageView
             android:id="@+id/iv_item_delete"
             android:layout_width="wrap_content"
+            android:layout_alignParentRight="true"
             android:layout_height="wrap_content"
+            android:paddingLeft="20dp"
+            android:paddingTop="10dp"
+            android:paddingBottom="10dp"
+            android:paddingRight="5dp"
             android:src="@mipmap/cha" />
 
-        <ImageView
-            android:id="@+id/iv_item_up"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_alignParentRight="true"
-            android:src="@mipmap/jt_up" />
 
         <ImageView
-            android:id="@+id/iv_item_down"
+            android:id="@+id/iv_item_select"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_alignParentBottom="true"
+            android:layout_height="match_parent"
+            android:paddingRight="5dp"
             android:layout_alignParentRight="true"
-            android:src="@mipmap/jt_dwon" />
+            android:paddingLeft="20dp"
+            android:layout_below="@id/iv_item_delete"
+            android:src="@mipmap/icon_editor_move" />
 
-        <LinearLayout
-            android:id="@+id/ll"
+        <RelativeLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:layout_alignParentLeft="true"
-            android:layout_alignParentStart="true"
-            android:layout_alignParentTop="true"
             android:orientation="horizontal"
-            android:padding="18dp">
+            android:gravity="center_vertical"
+            android:layout_toLeftOf="@id/iv_item_select"
+            android:paddingLeft="10dp">
 
 
             <ImageView
                 android:id="@+id/iv_item_pic"
-                android:layout_width="64dp"
-                android:layout_height="64dp"
-                android:scaleType="fitXY"
+                android:layout_width="68dp"
+                android:layout_height="68dp"
+                android:layout_centerVertical="true"
+                android:scaleType="centerCrop"
                 android:src="@mipmap/img" />
 
             <TextView
                 android:id="@+id/tv_item_desc"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_centerVertical="true"
+                android:layout_alignTop="@id/iv_item_pic"
+                android:layout_toRightOf="@id/iv_item_pic"
                 android:layout_marginLeft="5dp"
-                android:layout_marginRight="5dp"
                 android:ellipsize="end"
                 android:lines="4"
                 android:maxLines="4"
-                android:text="点击添加文字"
+                android:hint="点击添加文字"
                 android:textColor="#1e1e1e" />
-        </LinearLayout>
+        </RelativeLayout>
     </RelativeLayout>
+    <include layout="@layout/view_add_item" />
 </LinearLayout>

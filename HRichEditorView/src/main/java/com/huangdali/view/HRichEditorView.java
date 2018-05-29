@@ -1,7 +1,5 @@
 package com.huangdali.view;
 
-import android.animation.ObjectAnimator;
-import android.animation.ValueAnimator;
 import android.app.Activity;
 import android.content.Intent;
 import android.net.Uri;
@@ -9,7 +7,6 @@ import android.os.Bundle;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.support.v7.widget.helper.ItemTouchHelper;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
@@ -22,14 +19,12 @@ import com.huangdali.base.EditorResultBean;
 import com.huangdali.bean.EContent;
 import com.huangdali.bean.ItemType;
 import com.huangdali.bean.RichEditorAdapter;
-import com.huangdali.utils.SimpleItemTouchHelperCallback;
 import com.luck.picture.lib.model.FunctionConfig;
 import com.luck.picture.lib.model.LocalMediaLoader;
 import com.luck.picture.lib.model.PictureConfig;
 import com.yalantis.ucrop.entity.LocalMedia;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 import io.valuesfeng.picker.Picker;
@@ -58,12 +53,11 @@ public class HRichEditorView extends Activity {
     /**
      * 组件区
      */
-    private RecyclerView rvItemList;
+    private RecyclerView rv_List;
     private LinearLayoutManager linearLayoutManager;
     private RichEditorAdapter adapter;
     private TextView tvArtTitle;
     private ImageView ivArtBGImg;
-
     /**
      * 数据区
      */
@@ -122,7 +116,7 @@ public class HRichEditorView extends Activity {
         /**
          * 初始化RecyclerView
          */
-        rvItemList = (RecyclerView) findViewById(R.id.rv_itemlist);
+        rv_List = (RecyclerView) findViewById(R.id.rv_itemlist);
 
         linearLayoutManager = new LinearLayoutManager(this) {
             @Override
@@ -130,25 +124,14 @@ public class HRichEditorView extends Activity {
                 return false;
             }
         };
-        rvItemList.setLayoutManager(linearLayoutManager);
-
-        rvItemList.setItemAnimator(new DefaultItemAnimator());
+        rv_List.setLayoutManager(linearLayoutManager);
+        rv_List.setItemAnimator(new DefaultItemAnimator());
         datas = new ArrayList<>();
 
 //        rvItemList.setHasFixedSize(true);//最重要的这句，不然recycleview不显示
         adapter = new RichEditorAdapter(this, datas);
-        rvItemList.setAdapter(adapter);
-
+        rv_List.setAdapter(adapter);
         adapter.setOnDownUpChangeListener(new RichEditorAdapter.OnDownUpChangeListener() {
-            @Override
-            public void onDown(final View view, int postion) {
-                swapDown(postion);
-            }
-
-            @Override
-            public void onUp(View view, int postion) {
-                swapUp(postion);
-            }
 
             @Override
             public void onDrop(View view, int postion) {
@@ -163,7 +146,7 @@ public class HRichEditorView extends Activity {
         });
         adapter.setOnItemClickListener(new RichEditorAdapter.OnItemClickListener() {
             @Override
-            public void onClick(String itemType, int index) {
+            public void onClick(String itemType, int index, RecyclerView.ViewHolder viewHolder) {
                 EContent eContent = new EContent();
                 switch (itemType) {
                     case ItemType.IMG:
@@ -181,12 +164,6 @@ public class HRichEditorView extends Activity {
             }
         });
 
-        //创建SimpleItemTouchHelperCallback
-        ItemTouchHelper.Callback callback = new SimpleItemTouchHelperCallback(adapter, rvItemList);
-        //用Callback构造ItemtouchHelper
-        ItemTouchHelper touchHelper = new ItemTouchHelper(callback);
-        //调用ItemTouchHelper的attachToRecyclerView方法建立联系
-        touchHelper.attachToRecyclerView(rvItemList);
 
         /**
          * 初始化文章标题
@@ -208,62 +185,6 @@ public class HRichEditorView extends Activity {
         adapter.notifyDataSetChanged();
     }
 
-
-    /**
-     * 向下交换
-     *
-     * @param postion
-     */
-    private void swapDown(final int postion) {
-        if (translateDistance == 0) {
-            translateDistance = adapter.getItemHight(linearLayoutManager) + 10;
-        }
-        ObjectAnimator animatorDown = ObjectAnimator.ofFloat(linearLayoutManager.getChildAt(postion), "TranslationY", 0, translateDistance);
-        animatorDown.setDuration(ANIMATION_DURATION);
-        animatorDown.start();
-        animatorDown.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
-            @Override
-            public void onAnimationUpdate(ValueAnimator animation) {
-                float animatedValue = (float) animation.getAnimatedValue();
-                if (animatedValue == translateDistance) {
-                    Collections.swap(datas, postion, postion + 1);
-                    adapter.notifyDataSetChanged();
-                    rvItemList.setAdapter(adapter);//需要重新设置适配器才有效果
-                }
-            }
-        });
-        ObjectAnimator animatorUp = ObjectAnimator.ofFloat(linearLayoutManager.getChildAt(postion + 1), "TranslationY", 0, -translateDistance);
-        animatorUp.setDuration(ANIMATION_DURATION);
-        animatorUp.start();
-    }
-
-    /**
-     * 向上交换
-     *
-     * @param postion
-     */
-    private void swapUp(final int postion) {
-        if (translateDistance == 0) {
-            translateDistance = adapter.getItemHight(linearLayoutManager) + 10;
-        }
-        ObjectAnimator animatorUp = ObjectAnimator.ofFloat(linearLayoutManager.getChildAt(postion), "TranslationY", 0, -translateDistance);
-        animatorUp.setDuration(ANIMATION_DURATION);
-        animatorUp.start();
-        animatorUp.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
-            @Override
-            public void onAnimationUpdate(ValueAnimator animation) {
-                float animatedValue = (float) animation.getAnimatedValue();
-                if (animatedValue == -translateDistance) {
-                    Collections.swap(datas, postion, postion - 1);
-                    adapter.notifyDataSetChanged();
-                    rvItemList.setAdapter(adapter);
-                }
-            }
-        });
-        ObjectAnimator animatorDown = ObjectAnimator.ofFloat(linearLayoutManager.getChildAt(postion - 1), "TranslationY", 0, translateDistance);
-        animatorDown.setDuration(ANIMATION_DURATION);
-        animatorDown.start();
-    }
 
     /**
      * 更换背景
