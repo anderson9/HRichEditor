@@ -71,5 +71,9 @@
                 android:textColor="#1e1e1e" />
         </RelativeLayout>
     </RelativeLayout>
-    <include layout="@layout/view_add_item" />
+    <ImageView
+        android:id="@+id/iv_additem_add"
+        style="@style/additem"
+        android:layout_gravity="center"
+        android:src="@mipmap/add" />
 </LinearLayout>

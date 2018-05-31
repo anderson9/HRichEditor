@@ -2,17 +2,17 @@ package com.huangdali.bean;
 
 import android.text.TextUtils;
 
-import java.io.Serializable;
-
 /**
- * 内容对象
- * Created by HDL on 2017/2/17.
- */
+ * -------------------------------------------
+ * Dec:富文本content的对象
+ * Created by: Luojiusan on 2018/5/30--:10:53
+ * Modify by:
+ * -------------------------------------------
+ **/
 
-public class EContent implements Serializable {
-    private String url;
-    private String content;
-    private String style;
+public class EContent  {
+    private String url;  //图片或者 视频的地址 get时候拼接成地址
+    private String content;//富文本内容 自成html格式
     private String type;
 
     public EContent() {
@@ -26,9 +26,10 @@ public class EContent implements Serializable {
     public EContent(String url, String content, String style, String type) {
         this.url = url;
         this.content = content;
-        this.style = style;
         this.type = type;
     }
+
+
 
     public String getType() {
         return type;
@@ -54,31 +55,13 @@ public class EContent implements Serializable {
         this.content = content;
     }
 
-    public String getStyle() {
-        return style;
-    }
-
-    public void setStyle(String style) {
-        this.style = style;
-    }
-
-
-    @Override
-    public String toString() {
-        return "EContent{" +
-                "url='" + url + '\'' +
-                ", content='" + content + '\'' +
-                ", style='" + style + '\'' +
-                ", type='" + type + '\'' +
-                '}';
-    }
 
     public String getHtml() {
         String html = "";
         switch (type) {
             case ItemType.IMG:
                 if (!TextUtils.isEmpty(content)) {
-                    html = "<div style='" + style + "' >" + content + "</div><img src='" + url + "' />";
+                    html = content + "</div><img src='" + url + "' />";
                 } else {
                     html = "<img src='" + url + "' />";
                 }
@@ -86,17 +69,18 @@ public class EContent implements Serializable {
                 break;
             case ItemType.VIDEO:
                 if (!TextUtils.isEmpty(content)) {
-                    html = "<div style='" + style + "' >" + content + "</div><video src='" + url + "' />";
+                    html = content + "</div><video src='" + url + "' />";
                 } else {
                     html = "<video src='" + url + "' />";
                 }
                 html += "<br/>";
                 break;
             case ItemType.TXT:
-                html = "<div style='" + style + "' >" + content + "</div>";
+                html = content;
                 html += "<br/>";
                 break;
         }
         return html;
     }
+
 }

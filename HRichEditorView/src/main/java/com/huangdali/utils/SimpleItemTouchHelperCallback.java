@@ -72,7 +72,7 @@ public class SimpleItemTouchHelperCallback extends ItemTouchHelper.Callback {
             case ItemTouchHelper.ACTION_STATE_IDLE:
                 //空闲状态
 //                if (mTouchDragListnerList != null) {
-//                    for (onTouchDragListner listner : mTouchDragListnerList) {
+//                    for (onTouchDragListner listner : m   TouchDragListnerList) {
 //                        listner.onStop();
 //                    }
 //                }

@@ -1,15 +1,14 @@
 apply plugin: 'com.android.application'
 
 android {
-    compileSdkVersion 24
+    compileSdkVersion 26
     buildToolsVersion '26.0.2'
     defaultConfig {
         applicationId "hricheditor.hdl.com.hricheditor"
-        minSdkVersion 14
-        targetSdkVersion 23
+        minSdkVersion 17
+        targetSdkVersion 26
         versionCode 1
         versionName "1.0"
-        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
     buildTypes {
         release {
@@ -21,8 +20,6 @@ android {
 
 dependencies {
     compile fileTree(include: ['*.jar'], dir: 'libs')
-    compile 'com.android.support:appcompat-v7:24.+'
-    testCompile 'junit:junit:4.12'
-    compile 'com.hdl:elog:v2.0.2'
+    compile 'com.android.support:appcompat-v7:26.1.0'
     compile project(path: ':HRichEditorView')
 }

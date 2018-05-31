@@ -3,7 +3,6 @@ package com.huangdali.bean;
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.helper.ItemTouchHelper;
 import android.text.TextUtils;
@@ -12,56 +11,71 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
-import com.bumptech.glide.load.engine.DiskCacheStrategy;
 import com.hdl.hricheditorview.R;
+import com.huangdali.editweb.ImageUtils;
 import com.huangdali.utils.ItemTouchHelperAdapter;
 import com.huangdali.utils.SimpleItemTouchHelperCallback;
-import com.huangdali.view.TXTEditorActivity;
+import com.huangdali.view.ChoiceRichEditTypePopWindow;
+import com.huangdali.view.RichEditTextActivity;
+import com.luck.picture.lib.PictureSelector;
+import com.luck.picture.lib.entity.LocalMedia;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import io.valuesfeng.picker.Picker;
-import io.valuesfeng.picker.engine.GlideEngine;
-
-
 /**
- * item适配器
- * Created by HDL on 2017/3/14.
- */
-
-public class RichEditorAdapter extends RecyclerView.Adapter<RichEditorAdapter.MyViewHolder> implements ItemTouchHelperAdapter {
-    private List<EContent> datas;
-    private Activity context;
+ * -------------------------------------------
+ * Dec:主要类 富文本原生 列表 适配器。。 控制数据传递 控制视图移动
+ * Created by: Luojiusan on 2018/5/30--:11:26
+ * Modify by:
+ * -------------------------------------------
+ **/
+public class RichEditorAdapter extends RecyclerView.Adapter implements ItemTouchHelperAdapter {
+    private List<EContent> mDatas;
+    private Activity mContext;
     private static final int REQUEST_CODE_CHOOSE_ITEM_IMG = 1002;//更改item图片
     private static final int REQUEST_CODE_EDIT_TXT = 1005;//编辑文本
+    private static final int REQUEST_CODE_NEW_TXT = 1004;//新建文本
+    private static final int REQUEST_CODE_NEW_IMG = 1003;//新建图片
+
     private int curClickItemIndex = 0;//当前点击的item
 
-    public void setDrag(boolean drag) {
-        isDrag = drag;
-    }
 
     private boolean isDrag = false;//是否正在拖拽
-    private OnDownUpChangeListener onDownUpChangeListener;
-    private OnChoiseVideoListener onChoiseVideoListener;
-    private OnItemClickListener onItemClickListener;
-    ItemTouchHelper mTouchHelper;
+    private ItemTouchHelper mTouchHelper;
     SimpleItemTouchHelperCallback mTouchHelperCallBack;
+    ChoiceRichEditTypePopWindow mPop;
 
-    public void setOnDownUpChangeListener(OnDownUpChangeListener onDownUpChangeListener) {
-        this.onDownUpChangeListener = onDownUpChangeListener;
+
+    public static final int TYPE_EMPTY = 2;  //空视图
+    public static final int TYPE_LIST = 3;  //有数据
+
+    /**
+     * 适配器需要适配的布局
+     */
+    public static int mAdapterType = TYPE_EMPTY;//默认加载中
+
+    public RichEditorAdapter(Activity Context, List<EContent> Datas) {
+        this.mDatas = Datas;
+        this.mContext = Context;
     }
 
-
-    public RichEditorAdapter(Activity context, List<EContent> datas) {
-        this.datas = datas;
-        this.context = context;
+    @Override
+    public int getItemViewType(int position) {
+        if (mAdapterType == TYPE_EMPTY) {
+            return TYPE_EMPTY;
+        } else if (mAdapterType == TYPE_LIST) {
+            return TYPE_LIST;
+        } else {
+            return TYPE_EMPTY;
+        }
     }
+
 
     @Override
     public void onAttachedToRecyclerView(RecyclerView recyclerView) {
@@ -77,17 +91,47 @@ public class RichEditorAdapter extends RecyclerView.Adapter<RichEditorAdapter.My
     }
 
     @Override
-    public MyViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        MyViewHolder myViewHolder = new MyViewHolder(LayoutInflater.from(context).inflate(R.layout.recycleview_item, parent, false));
-        if (mTouchHelperCallBack != null) {
-            mTouchHelperCallBack.addTouDragListner(myViewHolder);
+    public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+        switch (viewType) {
+            case TYPE_EMPTY:
+                EmptyAddholder emptyAddholder = new EmptyAddholder(LayoutInflater.from(mContext).inflate(R.layout.item_empty_editlist, parent, false));
+                return emptyAddholder;
+            case TYPE_LIST:
+                MyViewHolder myViewHolder = new MyViewHolder(LayoutInflater.from(mContext).inflate(R.layout.recycleview_item, parent, false));
+                if (mTouchHelperCallBack != null) {
+                    mTouchHelperCallBack.addTouDragListner(myViewHolder);
+                }
+                return myViewHolder;
         }
-        return myViewHolder;
+        EmptyAddholder emptyAddholder = new EmptyAddholder(LayoutInflater.from(mContext).inflate(R.layout.item_empty_editlist, parent, false));
+        return emptyAddholder;
     }
 
     @Override
-    public void onBindViewHolder(final MyViewHolder holder, final int position) {
-        final EContent eContent = datas.get(position);
+    public void onBindViewHolder(final RecyclerView.ViewHolder holder, final int position) {
+        switch (getItemViewType(position)) {
+            case TYPE_EMPTY:
+                EmptyAddholder VH = (EmptyAddholder) holder;
+                VH.iv_additem_add.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        initPop(v, 0, false);
+                    }
+                });
+                break;
+            case TYPE_LIST:
+                binList((MyViewHolder) holder, position);
+                break;
+        }
+    }
+
+    /**
+     * 绑定列表
+     *
+     * @param position
+     */
+    private void binList(final MyViewHolder holder, final int position) {
+        final EContent eContent = mDatas.get(position);
         /**
          * 隐藏第一个item的上箭头和最后一个item的下箭头
          */
@@ -100,7 +144,7 @@ public class RichEditorAdapter extends RecyclerView.Adapter<RichEditorAdapter.My
             holder.iv_additem_add.setVisibility(View.VISIBLE);
         }
         //设置内容
-        holder.tvDesc.setText(TextUtils.isEmpty(eContent.getContent()) ? context.getString(R.string.rich_click_add_txt) : eContent.getContent());
+        holder.tvDesc.setText(TextUtils.isEmpty(eContent.getContent()) ? mContext.getString(R.string.rich_click_add_txt) : StripHT(eContent.getContent()));
         /**
          * 根据类型显示item的图片
          */
@@ -109,11 +153,8 @@ public class RichEditorAdapter extends RecyclerView.Adapter<RichEditorAdapter.My
                 if (TextUtils.isEmpty(eContent.getUrl())) {
                     holder.ivPic.setImageResource(R.mipmap.img);
                 } else {
-                    Glide.with(context)
+                    Glide.with(mContext)
                             .load(eContent.getUrl())
-                            .diskCacheStrategy(DiskCacheStrategy.ALL)
-                            .placeholder(R.mipmap.img)
-                            .error(R.mipmap.img)
                             .into(holder.ivPic);
                 }
                 break;
@@ -132,10 +173,7 @@ public class RichEditorAdapter extends RecyclerView.Adapter<RichEditorAdapter.My
             public void onClick(View v) {
                 if (eContent.getType().equals(ItemType.IMG)) {
                     curClickItemIndex = position;
-                    toChoiseItemPic();
-                } else if (eContent.getType().equals(ItemType.VIDEO)) {
-                    curClickItemIndex = position;
-                    toChoiseItemVideo();
+                    toChoiseItemPic(REQUEST_CODE_CHOOSE_ITEM_IMG);
                 }
 
             }
@@ -162,7 +200,12 @@ public class RichEditorAdapter extends RecyclerView.Adapter<RichEditorAdapter.My
             @Override
             public void onClick(View v) {
                 curClickItemIndex = position;
-                toTxtEditorPage(position);
+                toTxtEditorPage(position, REQUEST_CODE_EDIT_TXT);
+            }
+        });
+        holder.ivDrop.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
             }
         });
         /**
@@ -171,133 +214,79 @@ public class RichEditorAdapter extends RecyclerView.Adapter<RichEditorAdapter.My
         holder.iv_additem_add.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                showAddItemArea(holder);
+                initPop(v, position, true);
             }
         });
-        /**
-         * 设置添加图片、文本、视频的监听
-         */
-        holder.ivAddImg.setOnClickListener(new View.OnClickListener() {
+        holder.iv_additem_add_top.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                hideAddArea(holder);
-                if (onItemClickListener != null) {
-                    onItemClickListener.onClick(ItemType.IMG, position, holder);
-                }
-            }
-        });
-        holder.ivAddVideo.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                hideAddArea(holder);
-                if (onItemClickListener != null) {
-                    onItemClickListener.onClick(ItemType.VIDEO, position, holder);
-                }
-            }
-        });
-        holder.ivAddTxt.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                hideAddArea(holder);
-                if (onItemClickListener != null) {
-                    onItemClickListener.onClick(ItemType.TXT, position, holder);
-                }
-            }
-        });
-        holder.ivDrop.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                onDownUpChangeListener.onDrop(v, position);
+                initPop(v, position, false);
             }
         });
     }
 
-    /**
-     * 显示增加图片、文字、视频区域，隐藏添加按钮
-     *
-     * @param holder
-     */
-    private void showAddItemArea(MyViewHolder holder) {
-        holder.iv_additem_add.setVisibility(View.GONE);
-        holder.rvAddItemArea.setVisibility(View.VISIBLE);
+    private void initPop(View v, final int position, final boolean isBottom) {
+        if (mPop == null) {
+            mPop = new ChoiceRichEditTypePopWindow(mContext);
+        }
+        mPop.setOnItemClickListener(new OnContentItemClickListener() {
+            @Override
+            public void onClick(String itemTyper) {
+                if (isBottom) { //下标需要设置下一个item 的position
+                    curClickItemIndex = position + 1;
+                }
+                switch (itemTyper) {
+                    case ItemType.TXT:
+                        toTxtEditorPage(position, REQUEST_CODE_NEW_TXT);
+                        break;
+                    case ItemType.IMG:
+                        toChoiseItemPic(REQUEST_CODE_NEW_IMG);
+                        break;
+                    default:
+                }
+            }
+        });
+        if (position + 1 == mDatas.size() && isBottom) {
+            mPop.showTopByView(v);
+        } else {
+            mPop.showDownByView(v);
+        }
     }
 
-    /**
-     * 隐藏增加图片、文字、视频区域，显示添加按钮
-     *
-     * @param holder
-     */
-    private void hideAddArea(MyViewHolder holder) {
-        holder.rvAddItemArea.setVisibility(View.GONE);
-        holder.iv_additem_add.setVisibility(View.VISIBLE);
-    }
 
     /**
      * 跳转到文本编辑页面
      *
      * @param index
      */
-    private void toTxtEditorPage(int index) {
-        Intent intent = new Intent(context, TXTEditorActivity.class);
+    private void toTxtEditorPage(int index, int code) {
+        Intent intent = new Intent(mContext, RichEditTextActivity.class);
         Bundle bundle = new Bundle();
-        bundle.putSerializable("eContent", datas.get(index));
+        if (mDatas.size() > 0 && index < mDatas.size()) {
+            bundle.putString("html", mDatas.get(index).getContent());
+        }
         intent.putExtras(bundle);
-        context.startActivityForResult(intent, REQUEST_CODE_EDIT_TXT);
+        mContext.startActivityForResult(intent, code);
     }
 
     /**
      * 更换item的图片
      */
-    private void toChoiseItemPic() {
-        Picker.from(context)
-                .count(1)
-                .enableCamera(true)
-                .setEngine(new GlideEngine())
-                .forResult(REQUEST_CODE_CHOOSE_ITEM_IMG);
+    private void toChoiseItemPic(int code) {
+        ImageUtils.showcamrae(mContext, 1, code);
     }
 
-    /**
-     * 获取item的高度
-     *
-     * @return
-     */
-    public int getItemHight(LinearLayoutManager linearLayoutManager) {
-        return linearLayoutManager.getChildAt(0).getMeasuredHeight();
-    }
-
-    /**
-     * 更换item的视频
-     */
-    private void toChoiseItemVideo() {
-        onChoiseVideoListener.onStart();
-    }
-
-
-    /**
-     * 设置item的单击事件
-     *
-     * @param onItemClickListener
-     */
-    public void setOnItemClickListener(OnItemClickListener onItemClickListener) {
-        this.onItemClickListener = onItemClickListener;
-    }
-
-    /**
-     * 设置选择视频的监听
-     *
-     * @param onChoiseVideoListener
-     */
-    public void setOnChoiseVideoListener(OnChoiseVideoListener onChoiseVideoListener) {
-        this.onChoiseVideoListener = onChoiseVideoListener;
+    public void setDrag(boolean drag) {
+        isDrag = drag;
     }
 
     @Override
     public void onItemMove(RecyclerView.ViewHolder source, RecyclerView.ViewHolder target) {
         int fromPosition = source.getAdapterPosition();
         int toPosition = target.getAdapterPosition();
-        if (fromPosition < datas.size() && toPosition < datas.size()) {
+        if (fromPosition < mDatas.size() && toPosition < mDatas.size()) {
             //交换数据位置
-            Collections.swap(datas, fromPosition, toPosition);
+            Collections.swap(mDatas, fromPosition, toPosition);
             //刷新位置交换
             notifyItemMoved(fromPosition, toPosition);
         }
@@ -332,20 +321,16 @@ public class RichEditorAdapter extends RecyclerView.Adapter<RichEditorAdapter.My
         void onDrop(View view, int postion);
     }
 
-    /**
-     * 选择视频
-     */
-    public interface OnChoiseVideoListener {
-        void onStart();
-    }
-
-    public interface OnItemClickListener {
-        void onClick(String itemType, int index, RecyclerView.ViewHolder viewHolder);
-    }
 
     @Override
     public int getItemCount() {
-        return datas.size();
+        if (mDatas.size() == 0) {
+            mAdapterType = TYPE_EMPTY;
+        } else {
+            mAdapterType = TYPE_LIST;
+        }
+
+        return mDatas.size() == 0 ? 1 : mDatas.size();
     }
 
     /**
@@ -362,10 +347,9 @@ public class RichEditorAdapter extends RecyclerView.Adapter<RichEditorAdapter.My
      */
     public static class MyViewHolder extends RecyclerView.ViewHolder implements SimpleItemTouchHelperCallback.onTouchDragListner {
         View rootView;
-        ImageView ivPic, ivDrop, iv_additem_add, ivAddTxt, ivAddImg, ivAddVideo, iv_item_select, iv_additem_add_top;
+        ImageView ivPic, ivDrop, iv_additem_add, iv_item_select, iv_additem_add_top;
         TextView tvDesc;
         RelativeLayout rl_item;
-        LinearLayout rvAddItemArea;
 
         public MyViewHolder(View itemView) {
             super(itemView);
@@ -374,13 +358,9 @@ public class RichEditorAdapter extends RecyclerView.Adapter<RichEditorAdapter.My
             rl_item = (RelativeLayout) itemView.findViewById(R.id.rl_item);
             iv_additem_add = (ImageView) itemView.findViewById(R.id.iv_additem_add);
             iv_additem_add_top = (ImageView) itemView.findViewById(R.id.iv_additem_add_top);
-            ivAddTxt = (ImageView) itemView.findViewById(R.id.iv_additem_txt);
-            ivAddImg = (ImageView) itemView.findViewById(R.id.iv_additem_img);
-            ivAddVideo = (ImageView) itemView.findViewById(R.id.iv_additem_video);
             iv_item_select = (ImageView) itemView.findViewById(R.id.iv_item_select);
             ivDrop = (ImageView) itemView.findViewById(R.id.iv_item_delete);
             tvDesc = (TextView) itemView.findViewById(R.id.tv_item_desc);
-            rvAddItemArea = (LinearLayout) itemView.findViewById(R.id.ll_additem_addarea);
         }
 
         @Override
@@ -397,5 +377,60 @@ public class RichEditorAdapter extends RecyclerView.Adapter<RichEditorAdapter.My
         @Override
         public void onStop() {
         }
+    }
+
+    public static class EmptyAddholder extends RecyclerView.ViewHolder {
+        public View rootView;
+        public ImageView iv_additem_add;
+
+        public EmptyAddholder(View rootView) {
+            super(rootView);
+            this.rootView = rootView;
+            this.iv_additem_add = (ImageView) rootView.findViewById(R.id.iv_additem_add);
+        }
+
+    }
+
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (requestCode == REQUEST_CODE_CHOOSE_ITEM_IMG && resultCode == Activity.RESULT_OK) {//编辑图片
+            List<LocalMedia> selectList = PictureSelector.obtainMultipleResult(data);
+            if (selectList != null && selectList.size() > 0) {
+                for (int i = 0; i < selectList.size(); i++) {
+                    mDatas.get(getCurClickItemIndex()).setUrl(selectList.get(i).getCompressPath());
+                }
+            }
+            notifyDataSetChanged();
+        } else if (requestCode == REQUEST_CODE_EDIT_TXT && resultCode == Activity.RESULT_OK) {//编辑文字
+            String html = data.getStringExtra("html");
+            mDatas.get(getCurClickItemIndex()).setContent(html);
+            notifyDataSetChanged();
+        } else if (requestCode == REQUEST_CODE_NEW_TXT && resultCode == Activity.RESULT_OK) {//新建文本
+            String html = data.getStringExtra("html");
+            EContent content = new EContent();
+            content.setContent(html);
+            content.setType(ItemType.TXT);
+            mDatas.add(curClickItemIndex, content);
+            notifyDataSetChanged();
+        } else if (requestCode == REQUEST_CODE_NEW_IMG && resultCode == Activity.RESULT_OK) {//新建图片
+            List<LocalMedia> selectList = PictureSelector.obtainMultipleResult(data);
+            if (selectList != null && selectList.size() > 0) {
+                // 获取返回的图片列表
+                List<String> imagePaths = new ArrayList<>();
+                for (int i = 0; i < selectList.size(); i++) {
+                    EContent content = new EContent();
+                    content.setUrl(selectList.get(i).getCompressPath());
+                    content.setType(ItemType.IMG);
+                    mDatas.add(curClickItemIndex + i, content);
+                    notifyDataSetChanged();
+                }
+            }
+        }
+    }
+
+    //从html中提取纯文本
+    public static String StripHT(String strHtml) {
+        String txtcontent = strHtml.replaceAll("</?[^>]+>", ""); //剔出<html>的标签
+        txtcontent = txtcontent.replaceAll("<a>\\s*|\t|\r|\n</a>", "");//去除字符串中的空格,回车,换行符,制表符
+        return txtcontent;
     }
 }

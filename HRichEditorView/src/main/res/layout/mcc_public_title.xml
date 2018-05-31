@@ -11,7 +11,7 @@
         android:layout_centerVertical="true"
         android:onClick="onBack"
         android:layout_marginLeft="5dp"
-        android:src="@mipmap/back" />
+        android:src="@mipmap/title_back" />
 
     <TextView
         android:id="@+id/tv_public_title"

@@ -7,9 +7,9 @@ import android.text.TextUtils;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.hdl.hricheditorview.R;
-import com.huangdali.utils.CToast;
 
 
 /**
@@ -37,7 +37,7 @@ public class TitleEidtorActivity extends Activity {
 
     public void onSubmit(View view) {
         if (TextUtils.isEmpty(etTitle.getText().toString().trim())) {
-            CToast.show(this, getString(R.string.title_dont_null));
+            Toast.makeText(this, getString(R.string.title_dont_null), 0);
             return;
         }
         Intent data = new Intent();

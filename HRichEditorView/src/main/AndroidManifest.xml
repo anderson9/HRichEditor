@@ -9,10 +9,10 @@
         android:allowBackup="true"
         android:label="@string/app_name"
         android:supportsRtl="true">
-        <activity android:name="com.huangdali.view.HRichEditorView" />
+        <activity android:name="com.huangdali.view.RichEditorActivity" />
+        <activity android:name="com.huangdali.view.RichEditTextActivity"
+            android:windowSoftInputMode="adjustResize|stateVisible"/>/>
         <activity android:name="com.huangdali.view.TitleEidtorActivity" />
-        <activity android:name="com.huangdali.view.TXTEditorActivity" />
-        <activity android:name="com.huangdali.view.LinkedActivity" />
     </application>
 
 </manifest>
